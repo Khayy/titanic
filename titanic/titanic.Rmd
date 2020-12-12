@@ -5,3 +5,23 @@ date: "1/28/2020"
 output: pdf_document
 ---
 
+```{r}
+suppressMessages(library(tidyverse))
+```
+## Load Data
+```{r}
+titanic <- read_csv("titanic.csv")
+```
+## Clean the data
+```{r}
+titanic$Survived <- as.factor(titanic$Survived)
+titanic$Sex <- as.factor(titanic$Sex)
+titanic$Pclass <- as.factor(titanic$Pclass)
+titanic$Embarked <- as.factor(titanic$Embarked)
+titanic
+```
+## Exploratory analysis
+```{r}
+
+```
+
