@@ -18,10 +18,88 @@ titanic$Survived <- as.factor(titanic$Survived)
 titanic$Sex <- as.factor(titanic$Sex)
 titanic$Pclass <- as.factor(titanic$Pclass)
 titanic$Embarked <- as.factor(titanic$Embarked)
-titanic
+titanic %>%
+  na.omit() -> titanic2
 ```
+
 ## Exploratory analysis
 ```{r}
+ggplot(titanic2, aes(Survived, Age)) +
+  geom_boxplot(stat = "boxplot")
+```
+```{r}
+ggplot(titanic2, aes(x = Sex, fill = Survived)) + 
+  theme_bw() +
+  geom_bar() +
+  labs(y = "Passenger Count",
+       title = "Titanic Survival Rates by Sex")
 
+```
+```{r}
+ggplot(titanic2, aes(x = Age, color = Survived)) +
+  theme_bw() +
+  geom_histogram(binwidth = 5) +
+  labs(y = "Passenger Count",
+       x = "Age (binwidth = 5)",
+       title = "Titanic Survival Rates by Age")
+```
+
+```{r}
+ggplot(titanic2, aes(x = Age, fill = Survived)) +
+  theme_bw() +
+  facet_wrap(Sex ~ Pclass) +
+  geom_histogram(binwidth = 5) +
+  labs(y = "Age",
+       x = "Survived",
+       title = "Titanic Survival Rates by Age, Pclass and Sex")
+```
+
+## Trying to see what factors made people survive or not
+```{r}
+titanic.MLR <-
+  glm(Survived ~ Pclass + Sex + Age + SibSp + Parch + Fare + Embarked,
+      family = binomial(link = logit),
+      titanic2)
+
+summary(titanic.MLR)
+```
+```{r}
+step(titanic.MLR, direction = "both")
+```
+## New model after fitting with step-wise
+```{r}
+titanic.MLR2 <-  glm(formula = Survived ~ Pclass + Sex + Age, family = binomial(link = logit), 
+    data = titanic2)
+```
+
+## Compare models 
+```{r}
+selcrit <-function(lmout) {
+n <- length(lmout$fit)
+rsq <- summary(lmout)$r.sq
+adj.rsq <- summary(lmout)$adj.r.sq 
+aic <- extractAIC(lmout)[2]
+bic <- extractAIC(lmout, k = log(n))[2]
+press <- sum((lmout$residuals/(1 - hatvalues(lmout)))^2) 
+cbind(rsq, adj.rsq, aic, bic, press)
+}
+```
+## Model 1
+```{r}
+selcrit(titanic.MLR)
+```
+## Model 2
+```{r}
+selcrit(titanic.MLR2)
+```
+## Conclusions
+- Both AIC and SBC (SBC is also known as BIC) for the 3-predictor (4-parameter) model are smaller.
+- PRESS for the 7-predictor (8-parameter) model is smaller.
+- R2 show both models explain a large proportion of the variation in risk of infection (Y). However, we should not use R2 for model selection since these two models have different number of parameters.
+-The below measures all indicate the 4-predictor, 5-parameter model is preferred over the model using all 3 predictors 
+
+## run an anova comparing both models
+```{r}
+anova(titanic.MLR, titanic.MLR2)
 ```
 
